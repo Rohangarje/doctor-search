@@ -11,12 +11,37 @@
 <div class="card-container" id="doctorList">
 
     {% for doctor in doctors %}
-    <div class="card">
+    <div class="card" onclick="showAbout('{{ doctor.name|escapejs }}', '{{ doctor.specialization|escapejs }}', '{{ doctor.services|escapejs }}', '{{ doctor.location|escapejs }}', `{{ doctor.about|escapejs }}`)">
         <h3>{{ doctor.name }}</h3>
         <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
         <p><strong>Services:</strong> {{ doctor.services }}</p>
         <p><strong>Location:</strong> {{ doctor.location }}</p>
     </div>
+    <!-- Doctor About Modal -->
+    <div id="aboutModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+        <div style="background:#fff; color:#222; border-radius:12px; padding:32px 28px; min-width:320px; max-width:90vw; max-height:80vh; overflow:auto; position:relative;">
+            <span onclick="closeAbout()" style="position:absolute; top:10px; right:18px; font-size:22px; cursor:pointer;">&times;</span>
+            <h2 id="aboutName"></h2>
+            <p id="aboutSpec"></p>
+            <p id="aboutServ"></p>
+            <p id="aboutLoc"></p>
+            <hr>
+            <div id="aboutInfo"></div>
+        </div>
+    </div>
+    <script>
+    function showAbout(name, spec, serv, loc, about) {
+        document.getElementById('aboutName').innerText = name;
+        document.getElementById('aboutSpec').innerHTML = '<b>Specialization:</b> ' + spec;
+        document.getElementById('aboutServ').innerHTML = '<b>Services:</b> ' + serv;
+        document.getElementById('aboutLoc').innerHTML = '<b>Location:</b> ' + loc;
+        document.getElementById('aboutInfo').innerText = about;
+        document.getElementById('aboutModal').style.display = 'flex';
+    }
+    function closeAbout() {
+        document.getElementById('aboutModal').style.display = 'none';
+    }
+    </script>
     {% empty %}
     <div class="card" style="background: #e3f2fd; color: #222;">
         <h3>Dr. Priya Sharma</h3>

@@ -7,6 +7,7 @@ class Doctor(models.Model):
     rating = models.FloatField()
     services = models.CharField(max_length=200, default='General Consultation')
     location = models.CharField(max_length=100, default='City Hospital')
+    about = models.TextField(default='No information provided.')
 
     def __str__(self):
         return self.name
