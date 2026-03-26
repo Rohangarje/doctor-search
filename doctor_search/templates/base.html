@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Search</title>
+
+    {% load static %}  <!-- IMPORTANT -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">MediFind+</div>
+    <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/dashboard/">Search</a></li>
+        {% if user.is_authenticated %}
+            <li><a href="/profile/">Profile</a></li>
+            <li><a href="/logout/">Logout</a></li>
+        {% else %}
+            <li><a href="/login/">Login</a></li>
+            <li><a href="/register/">Register</a></li>
+        {% endif %}
+    </ul>
+    <div class="nav-search">
+        <input type="text" id="navSearchInput" placeholder="Quick search..." onkeyup="navSearch()">
+        <span class="search-icon">🔍</span>
+    </div>
+</nav>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+<div class="floating-card">
+    <span>Welcome to MediFind+! 👋</span>
+</div>
+
+<script src="{% static 'js/script.js' %}"></script>
+</script>
+<script>
+// Navbar search animation
+function navSearch() {
+    let input = document.getElementById("navSearchInput").value.toLowerCase();
+    let cards = document.getElementsByClassName("card");
+    for (let i = 0; i < cards.length; i++) {
+        let text = cards[i].innerText.toLowerCase();
+        cards[i].style.display = text.includes(input) ? "" : "none";
+    }
+}
+</script>
+</body>
+</html>

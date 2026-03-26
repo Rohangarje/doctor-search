@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<form method="get" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 18px;">
+    <h2 style="margin-bottom: 8px;">Search Doctors</h2>
+    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search by name or location..." style="width: 220px; max-width: 90%; border-radius: 8px; padding: 8px 12px; font-size: 15px;">
+</form>
+
+<div class="card-container" id="doctorList">
+
+    {% for doctor in doctors %}
+    <div class="card">
+        <h3>{{ doctor.name }}</h3>
+        <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+        <p><strong>Services:</strong> {{ doctor.services }}</p>
+        <p><strong>Location:</strong> {{ doctor.location }}</p>
+    </div>
+    {% empty %}
+    <div class="card" style="background: #e3f2fd; color: #222;">
+        <h3>Dr. Priya Sharma</h3>
+        <p><strong>Specialization:</strong> Dermatologist</p>
+        <p><strong>Services:</strong> Skin Treatment, Allergy Test, Consultation</p>
+        <p><strong>Location:</strong> Pune Medical Center</p>
+        <p style="color:#1976d2;">(Add doctors in admin panel to see real data)</p>
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
