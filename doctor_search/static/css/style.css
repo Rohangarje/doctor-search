@@ -4,6 +4,8 @@ body {
     background: linear-gradient(135deg, #1e3c72, #2a5298);
     min-height: 100vh;
     transition: background 0.5s;
+    /* Doctor Search Page Styles */
+    .doctor-search-wrapper {
     color: white;
 }
 

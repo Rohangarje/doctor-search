@@ -1,117 +1,153 @@
 {% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="hero-content">
-        <h1>Find Your Perfect Doctor</h1>
-        <p>Search from {{ total_doctors|default:0 }} verified doctors across various specialties</p>
-    </div>
-</section>
-
-<!-- Filters & Search -->
-<div class="filters-bar">
-    <form method="get" class="search-filters">
-        <input type="text" name="q" value="{{ query }}" placeholder="Search doctors, locations..." id="mainSearch">
-        <select name="spec">
-            <option value="">All Specialties</option>
-            {% for spec, count in specialty_stats.items %}
-            <option value="{{ spec }}" {% if spec_filter == spec %}selected{% endif %}>{{ spec }} ({{ count }})</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="loc" value="{{ loc_filter }}" placeholder="Location...">
-        <button type="submit">Filter</button>
-        <a href="/dashboard/" class="clear-btn">Clear</a>
-    </form>
-</div>
-
-<!-- Stats Cards -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <span class="stat-icon">👨‍⚕️</span>
-        <h3>{{ total_doctors|default:0 }}</h3>
-        <p>Total Doctors</p>
-    </div>
-    <div class="stat-card">
-        <span class="stat-icon">🏥</span>
-        <h3 id="onlineCount">{% widthratio total_doctors 2 1 %}</h3>
-        <p>Online Now</p>
-    </div>
-    {% for spec, count in specialty_stats.items %}
-    <div class="stat-card">
-        <span class="stat-icon">⭐</span>
-        <h3>{{ count }}</h3>
-        <p>{{ spec }}</p>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Featured Doctors -->
-{% if featured_doctors %}
-<section class="featured-section">
-    <h2>Featured Doctors</h2>
-    <div class="carousel" id="featuredCarousel">
-        {% for doctor in featured_doctors %}
-        <div class="carousel-card" onclick="showDoctor('{{ doctor.name|escapejs }}', '{{ doctor.specialization|escapejs }}', '{{ doctor.services|escapejs }}', '{{ doctor.location|escapejs }}', '{{ doctor.about|escapejs }}', '{{ doctor.rating|default:4.5 }}')">
-            <h3>{{ doctor.name }}</h3>
-            <div class="rating-stars" data-rating="{{ doctor.rating|default:4.5 }}"></div>
-            <p>{{ doctor.specialization }}</p>
+<div class="dashboard-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-icon">🩺</span>
+            <span class="logo-text">MediFind</span>
         </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
+        <nav class="sidebar-nav">
+            <a href="/dashboard/" class="nav-link active">Home</a>
+            <a href="/find-doctor/" class="nav-link">Find Doctor</a>
+            <a href="/appointments/" class="nav-link">Appointments</a>
+            <a href="/reports/" class="nav-link">Reports</a>
+            <a href="/settings/" class="nav-link">Settings</a>
+        </nav>
+    </aside>
 
-<!-- Loading Skeletons -->
-<div class="skeleton-container" id="skeletons">
-    {% for i in "xxxxxx"|make_list %}
-    <div class="skeleton-card"></div>
-    {% endfor %}
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <header class="navbar">
+            <div class="navbar-left">
+                <span class="logo-icon">🩺</span>
+                <span class="logo-text">MediFind</span>
+            </div>
+            <form class="navbar-search" method="get">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search doctors, specialization, location...">
+                <button type="submit"><span class="search-icon">🔍</span></button>
+            </form>
+            <div class="navbar-user">
+                <img src="/static/img/user.png" alt="Profile" class="user-avatar" onclick="toggleUserMenu()">
+                <div class="user-menu" id="userMenu">
+                    <a href="/profile/">Profile</a>
+                    <a href="/appointments/">Appointments</a>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Welcome & Stats -->
+        <section class="welcome-section">
+            <h2>Welcome, {{ user.first_name|default:user.username }}</h2>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon stat-blue">📅</div>
+                    <div class="stat-info">
+                        <h3>{{ upcoming_appointments|default:0 }}</h3>
+                        <p>Upcoming Appointments</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-green">🩺</div>
+                    <div class="stat-info">
+                        <h3>{{ nearby_doctors|default:0 }}</h3>
+                        <p>Nearby Doctors</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-yellow">⭐</div>
+                    <div class="stat-info">
+                        <h3>{{ saved_doctors|default:0 }}</h3>
+                        <p>Saved Doctors</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Find Doctor Section -->
+        <section class="find-doctor-section">
+            <div class="find-header">
+                <h3>Find Doctor</h3>
+                <form class="find-filters" method="get">
+                    <select name="spec">
+                        <option value="">Specialization</option>
+                        {% for spec, count in specialty_stats.items %}
+                        <option value="{{ spec }}" {% if spec_filter == spec %}selected{% endif %}>{{ spec }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="rating">
+                        <option value="">Rating</option>
+                        <option value="5">5+</option>
+                        <option value="4">4+</option>
+                        <option value="3">3+</option>
+                    </select>
+                    <select name="distance">
+                        <option value="">Distance</option>
+                        <option value="5">Within 5km</option>
+                        <option value="10">Within 10km</option>
+                        <option value="20">Within 20km</option>
+                    </select>
+                    <button type="submit">Filter</button>
+                </form>
+            </div>
+            <div class="doctor-cards">
+                {% for doctor in doctors %}
+                <div class="doctor-card">
+                    <img src="{{ doctor.photo_url|default:'/static/img/doctor.png' }}" alt="{{ doctor.name }}" class="doctor-photo">
+                    <div class="doctor-info">
+                        <h4>{{ doctor.name }}</h4>
+                        <p class="doctor-spec">{{ doctor.specialization }}</p>
+                        <div class="doctor-rating">{{ doctor.rating|default:4.5 }} <span class="star">★</span></div>
+                        <button class="book-btn" onclick="showBookModal('{{ doctor.id }}')">Book</button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">No doctors found. Try adjusting your filters.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Recommended Doctors -->
+        <section class="recommended-section">
+            <h3>Recommended for You</h3>
+            <div class="doctor-cards recommended-cards">
+                {% for doctor in recommended_doctors %}
+                <div class="doctor-card">
+                    <img src="{{ doctor.photo_url|default:'/static/img/doctor.png' }}" alt="{{ doctor.name }}" class="doctor-photo">
+                    <div class="doctor-info">
+                        <h4>{{ doctor.name }}</h4>
+                        <p class="doctor-spec">{{ doctor.specialization }}</p>
+                        <div class="doctor-rating">{{ doctor.rating|default:4.5 }} <span class="star">★</span></div>
+                        <button class="book-btn" onclick="showBookModal('{{ doctor.id }}')">Book</button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">No recommendations yet.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="recent-activity-section">
+            <h3>Recent Activity</h3>
+            <ul class="activity-list">
+                {% for activity in recent_activity %}
+                <li>{{ activity }}</li>
+                {% empty %}
+                <li>No recent activity.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
 </div>
 
-<!-- Doctors Grid -->
-<div class="card-container" id="doctorList" style="display:none;">
-    {% for doctor in doctors %}
-    <div class="card doctor-card" onclick="showDoctor('{{ doctor.name|escapejs }}', '{{ doctor.specialization|escapejs }}', '{{ doctor.services|escapejs }}', '{{ doctor.location|escapejs }}', '{{ doctor.about|escapejs }}', '{{ doctor.rating|default:4.5 }}')">
-        <div class="card-header">
-            <div class="online-badge"></div>
-            <h3>{{ doctor.name }}</h3>
-        </div>
-        <div class="rating-stars" data-rating="{{ doctor.rating|default:4.5 }}"></div>
-        <p class="spec">{{ doctor.specialization }}</p>
-        <p><strong>{{ doctor.services }}</strong></p>
-        <p class="location">{{ doctor.location }}</p>
-        <button class="book-btn" onclick="showBook()">Quick Book</button>
-    </div>
-    {% empty %}
-    <!-- Empty State -->
-    <div class="empty-state">
-        <span class="empty-icon">🏥</span>
-        <h2>No Doctors Found</h2>
-        <p>Be the first to add doctors via <a href="/admin/">Admin Panel</a></p>
-        <button class="cta-btn" onclick="window.open('/admin/', '_blank')">Add Doctor Now</button>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Modals -->
-<div id="aboutModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeDoctor()">&times;</span>
-        <h2 id="aboutName"></h2>
-        <div class="rating-stars" id="modalRating"></div>
-        <p id="aboutSpec"></p>
-        <p id="aboutServ"></p>
-        <p id="aboutLoc"></p>
-        <hr>
-        <p id="aboutInfo"></p>
-        <button class="book-btn full">Book Appointment</button>
-    </div>
-</div>
-
+<!-- Book Modal -->
 <div id="bookModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeBook()">×</span>
+        <span class="close" onclick="closeBookModal()">×</span>
         <h2>Book Appointment</h2>
         <form class="book-form">
             <input type="text" placeholder="Your Name" required>
@@ -123,64 +159,30 @@
     </div>
 </div>
 
-<style>
-/* Inline temp styles, will move to CSS */
-.hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 60px 20px; }
-.hero-content h1 { font-size: 3em; margin: 0; }
-.filters-bar { background: white; padding: 20px; border-radius: 12px; margin: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-.search-filters { display: flex; gap: 10px; flex-wrap: wrap; }
-.search-filters input, select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1; min-width: 150px; }
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px; }
-.stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: #333; }
-.online-badge { position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; background: #4caf50; border-radius: 50%; animation: pulse 2s infinite; opacity: 0.7; }
-.rating-stars { display: flex; color: #ffd700; font-size: 18px; }
-.doctor-card { position: relative; }
-.book-btn { background: linear-gradient(90deg, #00f2fe, #4facfe); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; }
-.empty-state { grid-column: 1/-1; text-align: center; padding: 60px; color: #666; }
-</style>
-
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="/static/js/script.js"></script>
 <script>
-function renderStars(element, rating) {
-    element.innerHTML = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+// User menu toggle
+function toggleUserMenu() {
+    document.getElementById('userMenu').classList.toggle('show');
 }
-
-function showDoctor(name, spec, serv, loc, about, rating) {
-    document.getElementById('aboutName').textContent = name;
-    renderStars(document.getElementById('modalRating'), rating);
-    document.getElementById('aboutSpec').innerHTML = '<strong>Specialization:</strong> ' + spec;
-    document.getElementById('aboutServ').innerHTML = '<strong>Services:</strong> ' + serv;
-    document.getElementById('aboutLoc').innerHTML = '<strong>Location:</strong> ' + loc;
-    document.getElementById('aboutInfo').textContent = about;
-    document.getElementById('aboutModal').style.display = 'flex';
-}
-
-function closeDoctor() {
-    document.getElementById('aboutModal').style.display = 'none';
-}
-
-function showBook() {
+// Book modal logic
+function showBookModal(doctorId) {
     document.getElementById('bookModal').style.display = 'flex';
+    // Optionally, load doctor info by ID
 }
-
-function closeBook() {
+function closeBookModal() {
     document.getElementById('bookModal').style.display = 'none';
 }
-
-// Load animations
-setTimeout(() => {
-    document.getElementById('skeletons').style.opacity = '0';
-    document.getElementById('doctorList').style.display = 'flex';
-    setTimeout(() => document.getElementById('skeletons').style.display = 'none', 300);
-}, 1500);
-
-// Init stars & online on load
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.rating-stars').forEach(el => {
-        renderStars(el, parseFloat(el.dataset.rating));
-    });
-    document.querySelectorAll('.online-badge').forEach(b => {
-        if (Math.random() > 0.5) b.style.opacity = 1;
-    });
+// Hide user menu on click outside
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('userMenu');
+    const avatar = document.querySelector('.user-avatar');
+    if (menu && !menu.contains(e.target) && avatar !== e.target) {
+        menu.classList.remove('show');
+    }
 });
+</script>
+{% endblock %}
 </script>
 {% endblock %}

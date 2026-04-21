@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="doctor-search-wrapper">
+  <!-- Top Search Bar -->
+  <div class="search-bar">
+    <form method="get" class="search-form">
+      <input type="text" name="location" placeholder="Location" value="{{ location }}">
+      <button type="button" class="detect-btn">📍</button>
+      <select name="specialization">
+        <option value="">Specialization</option>
+        {% for spec in specializations %}
+        <option value="{{ spec }}" {% if spec == selected_spec %}selected{% endif %}>{{ spec }}</option>
+        {% endfor %}
+      </select>
+      <input type="number" name="experience" min="0" placeholder="Experience (years)" value="{{ experience }}">
+      <select name="rating">
+        <option value="">Rating</option>
+        <option value="5">5+</option>
+        <option value="4">4+</option>
+        <option value="3">3+</option>
+      </select>
+      <select name="availability">
+        <option value="">Availability</option>
+        <option value="today">Today</option>
+        <option value="tomorrow">Tomorrow</option>
+      </select>
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+  </div>
+
+  <div class="main-content">
+    <!-- Sidebar Filters -->
+    <aside class="sidebar-filters">
+      <h4>Filters</h4>
+      <label><input type="checkbox" name="online" {% if online %}checked{% endif %}> Online Consultation</label>
+      <label><input type="checkbox" name="female" {% if female %}checked{% endif %}> Female Doctors</label>
+    </aside>
+
+    <section class="doctor-list-section">
+      <!-- Map Integration -->
+      <div class="map-container">
+        <div id="doctorMap" style="height: 220px; border-radius: 16px; margin-bottom: 18px;"></div>
+      </div>
+
+      <!-- Doctor Cards -->
+      <div class="doctor-list">
+        {% for doctor in doctors %}
+        <div class="doctor-card">
+          <img src="{{ doctor.photo_url|default:'/static/img/doctor.png' }}" alt="{{ doctor.name }}" class="doctor-img">
+          <div class="doctor-details">
+            <h3>{{ doctor.name }}</h3>
+            <p class="spec">{{ doctor.specialization }}</p>
+            <p class="exp">{{ doctor.experience }} years experience</p>
+            <div class="rating">
+              <span class="star">★</span> {{ doctor.rating|default:4.5 }} ({{ doctor.reviews }} reviews)
+            </div>
+            <div class="availability {{ doctor.is_available|yesno:'available,unavailable' }}">
+              {{ doctor.is_available|yesno:'Available,Unavailable' }}
+            </div>
+            <div class="card-actions">
+              <button class="book-btn" onclick="showBookModal('{{ doctor.id }}')">Book Appointment</button>
+              <a href="{% url 'doctor_profile' doctor.id %}" class="profile-btn">View Profile</a>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">No doctors found for your criteria.</div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">&laquo; Prev</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
