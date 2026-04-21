@@ -16,3 +16,11 @@ window.onload = () => {
         document.body.style.opacity = 1;
     }, 100);
 };
+
+// Show doctor details in a modal or alert (implement modal as needed)
+function showDoctor(name, specialization, services, location, about, rating) {
+    // Example: show details in an alert (replace with modal logic as needed)
+    alert(
+        `Doctor: ${name}\nSpecialization: ${specialization}\nServices: ${services}\nLocation: ${location}\nAbout: ${about}\nRating: ${rating}`
+    );
+}

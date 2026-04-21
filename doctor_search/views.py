@@ -1,35 +1,57 @@
+
 from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.db.models import Q, Count
+from .models import Doctor
+
 # AJAX endpoint for doctor name/location suggestions
 def doctor_suggestions(request):
     query = request.GET.get('q', '')
     suggestions = []
     if query:
         doctors = Doctor.objects.filter(
-            models.Q(name__icontains=query) |
-            models.Q(location__icontains=query)
+            Q(name__icontains=query) |
+            Q(location__icontains=query)
         )[:5]
         for doc in doctors:
             suggestions.append({'name': doc.name, 'location': doc.location})
     return JsonResponse({'suggestions': suggestions})
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
-from django.db import models
-from .models import Doctor
 
 def home(request):
     return render(request, 'index.html')
 
 def dashboard(request):
+    # Build base queryset with filters
+    doctors = Doctor.objects.all()
     query = request.GET.get('q', '')
+    spec_filter = request.GET.get('spec', '')
+    loc_filter = request.GET.get('loc', '')
+
     if query:
-        doctors = Doctor.objects.filter(
-            models.Q(name__icontains=query) |
-            models.Q(location__icontains=query)
-        )
-    else:
-        doctors = Doctor.objects.all()
-    return render(request, 'dashboard.html', {'doctors': doctors, 'query': query})
+        doctors = doctors.filter(Q(name__icontains=query) | Q(location__icontains=query))
+    if spec_filter:
+        doctors = doctors.filter(specialization__icontains=spec_filter)
+    if loc_filter:
+        doctors = doctors.filter(location__icontains=loc_filter)
+
+    total_doctors = doctors.count()
+    specialty_stats = dict(
+        doctors.values('specialization').annotate(count=Count('id'))
+        .values_list('specialization', 'count')
+    )
+    featured_doctors = doctors[:3]
+
+    return render(request, 'dashboard.html', {
+        'doctors': doctors,
+        'query': query,
+        'spec_filter': spec_filter,
+        'loc_filter': loc_filter,
+        'total_doctors': total_doctors,
+        'specialty_stats': specialty_stats,
+        'featured_doctors': featured_doctors
+    })
 
 def login_view(request):
     message = ''
